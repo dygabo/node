@@ -27,6 +27,10 @@
 #include "tracing/traced_value.h"
 #include "util-inl.h"
 
+#if defined(NODE_USE_NATIVE_ALS) && NODE_USE_NATIVE_ALS
+#include "async_context_frame.h"
+#endif
+
 #include "v8.h"
 
 using v8::Context;
@@ -501,7 +505,14 @@ AsyncWrap::AsyncWrap(Environment* env,
 }
 
 AsyncWrap::AsyncWrap(Environment* env, Local<Object> object)
-  : BaseObject(env, object) {
+#if defined(NODE_USE_NATIVE_ALS) && NODE_USE_NATIVE_ALS
+    : BaseObject(env, object),
+      context_frame_(env->isolate(),
+                     AsyncContextFrame::current(env->isolate()))
+#else
+    : BaseObject(env, object)
+#endif
+{
 }
 
 // This method is necessary to work around one specific problem:
@@ -594,8 +605,9 @@ void AsyncWrap::AsyncReset(Local<Object> resource, double execution_async_id,
                                                      : execution_async_id;
   trigger_async_id_ = env()->get_default_trigger_async_id();
 
+  Isolate* isolate = env()->isolate();
   {
-    HandleScope handle_scope(env()->isolate());
+    HandleScope handle_scope(isolate);
     Local<Object> obj = object();
     CHECK(!obj.IsEmpty());
     if (resource != obj) {
@@ -624,6 +636,10 @@ void AsyncWrap::AsyncReset(Local<Object> resource, double execution_async_id,
     default:
       UNREACHABLE();
   }
+
+#if defined(NODE_USE_NATIVE_ALS) && NODE_USE_NATIVE_ALS
+  context_frame_.Reset(isolate, AsyncContextFrame::current(isolate));
+#endif
 
   if (silent) return;
 
@@ -668,8 +684,19 @@ MaybeLocal<Value> AsyncWrap::MakeCallback(const Local<Function> cb,
 
   ProviderType provider = provider_type();
   async_context context { get_async_id(), get_trigger_async_id() };
-  MaybeLocal<Value> ret = InternalMakeCallback(
-      env(), object(), object(), cb, argc, argv, context);
+  MaybeLocal<Value> ret =
+      InternalMakeCallback(env(),
+                           object(),
+                           object(),
+                           cb,
+                           argc,
+                           argv,
+#if defined(NODE_USE_NATIVE_ALS) && NODE_USE_NATIVE_ALS
+                           context,
+                           context_frame_.Get(env()->isolate()));
+#else
+                           context);
+#endif
 
   // This is a static call with cached values because the `this` object may
   // no longer be alive at this point.

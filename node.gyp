@@ -27,6 +27,7 @@
     'node_lib_target_name%': 'libnode',
     'node_intermediate_lib_type%': 'static_library',
     'node_builtin_modules_path%': '',
+    'node_use_native_als%': 'true',
     'linked_module_files': [
     ],
     # We list the deps/ files out instead of globbing them in js2c.cc since we
@@ -64,6 +65,7 @@
       'src/api/exceptions.cc',
       'src/api/hooks.cc',
       'src/api/utils.cc',
+      'src/async_context_frame.cc',
       'src/async_wrap.cc',
       'src/base_object.cc',
       'src/cares_wrap.cc',
@@ -172,6 +174,7 @@
       'src/aliased_buffer-inl.h',
       'src/aliased_struct.h',
       'src/aliased_struct-inl.h',
+      'src/async_context_frame.h',
       'src/async_wrap.h',
       'src/async_wrap-inl.h',
       'src/base_object.h',

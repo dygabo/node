@@ -660,6 +660,12 @@ parser.add_argument('--without-corepack',
     default=None,
     help='do not install the bundled Corepack')
 
+parser.add_argument('--with-native-als',
+    action='store_true',
+    dest='with_native_als',
+    default=None,
+    help='use native AsyncLocalStorage')
+
 # Dummy option for backwards compatibility
 parser.add_argument('--without-report',
     action='store_true',
@@ -1236,6 +1242,8 @@ def configure_node(o):
   o['variables']['debug_node'] = b(options.debug_node)
   o['default_configuration'] = 'Debug' if options.debug else 'Release'
   o['variables']['error_on_warn'] = b(options.error_on_warn)
+
+  o['variables']['node_use_native_als'] = b(options.with_native_als)
 
   host_arch = host_arch_win() if os.name == 'nt' else host_arch_cc()
   target_arch = options.dest_cpu or host_arch

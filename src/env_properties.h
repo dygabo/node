@@ -330,6 +330,7 @@
   V(x_forwarded_string, "x-forwarded-for")
 
 #define PER_ISOLATE_TEMPLATE_PROPERTIES(V)                                     \
+  V(async_context_frame_ctor_template, v8::FunctionTemplate)                   \
   V(async_wrap_ctor_template, v8::FunctionTemplate)                            \
   V(async_wrap_object_ctor_template, v8::FunctionTemplate)                     \
   V(binding_data_default_template, v8::ObjectTemplate)                         \

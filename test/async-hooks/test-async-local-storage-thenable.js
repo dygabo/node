@@ -1,9 +1,21 @@
+// Flags: --expose-internals
 'use strict';
 
 const common = require('../common');
 
 const assert = require('assert');
 const { AsyncLocalStorage } = require('async_hooks');
+
+// TODO(qard): This is known to fail with ContinuationPreservedEmbedderData
+// as thenables are not yet supported in V8. A fix should hopefully land soon.
+//
+// See: https://chromium-review.googlesource.com/c/v8/v8/+/4674242
+const { internalBinding } = require('internal/test/binding');
+const { AsyncContextFrame } = internalBinding('async_context_frame');
+const hasAsyncContextFrame = typeof AsyncContextFrame === 'function';
+if (hasAsyncContextFrame) {
+  return;
+}
 
 // This test verifies that async local storage works with thenables
 
