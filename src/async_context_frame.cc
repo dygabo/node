@@ -1,5 +1,6 @@
 #include "async_context_frame.h"  // NOLINT(build/include_inline)
 
+#include "env.h"
 #include "env-inl.h"
 #include "node_errors.h"
 #include "node_external_reference.h"
@@ -16,6 +17,7 @@ using v8::FunctionTemplate;
 using v8::Isolate;
 using v8::Local;
 using v8::Object;
+using v8::ObjectTemplate;
 using v8::Value;
 
 #if defined(NODE_USE_NATIVE_ALS) && NODE_USE_NATIVE_ALS
@@ -234,11 +236,14 @@ void AsyncContextFrame::RegisterExternalReferences(
 void AsyncContextFrame::CreatePerContextProperties(Local<Object> target,
                                                    Local<Value> unused,
                                                    Local<Context> context,
-                                                   void* priv) {
-  Environment* env = Environment::GetCurrent(context);
+                                                   void* priv) {}
 
-  auto t = AsyncContextFrame::GetConstructorTemplate(env);
-  SetConstructorFunction(context, target, "AsyncContextFrame", t);
+void AsyncContextFrame::CreatePerIsolateProperties(
+    IsolateData* isolate_data, Local<ObjectTemplate> target) {
+  Isolate* isolate = isolate_data->isolate();
+
+  auto t = AsyncContextFrame::GetConstructorTemplate(isolate_data);
+  SetConstructorFunction(isolate, target, "AsyncContextFrame", t);
 }
 
 void AsyncContextFrame::MemoryInfo(MemoryTracker* tracker) const {
@@ -251,20 +256,25 @@ void AsyncContextFrame::MemoryInfo(MemoryTracker* tracker) const {
 
 NODE_BINDING_CONTEXT_AWARE_INTERNAL(
     async_context_frame, node::AsyncContextFrame::CreatePerContextProperties)
+NODE_BINDING_PER_ISOLATE_INIT(
+    async_context_frame, node::AsyncContextFrame::CreatePerIsolateProperties)
 NODE_BINDING_EXTERNAL_REFERENCE(
     async_context_frame, node::AsyncContextFrame::RegisterExternalReferences)
 
 #else
 namespace node {
-void EmptyProperties(Local<Object> target,
-                     Local<Value> unused,
-                     Local<Context> context,
-                     void* priv) {}
+void EmptyContextProperties(Local<Object> target,
+                            Local<Value> unused,
+                            Local<Context> context,
+                            void* priv) {}
+
+void EmptyIsolateProperties(IsolateData* isolate_data,
+                            Local<ObjectTemplate> target) {}
 
 void EmptyExternals(ExternalReferenceRegistry* registry) {}
 }  // namespace node
 
-NODE_BINDING_CONTEXT_AWARE_INTERNAL(async_context_frame, node::EmptyProperties)
-
+NODE_BINDING_CONTEXT_AWARE_INTERNAL(async_context_frame, node::EmptyContextProperties)
+NODE_BINDING_PER_ISOLATE_INIT(async_context_frame, node::EmptyIsolateProperties)
 NODE_BINDING_EXTERNAL_REFERENCE(async_context_frame, node::EmptyExternals)
 #endif  // defined(NODE_USE_NATIVE_ALS) && NODE_USE_NATIVE_ALS

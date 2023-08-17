@@ -63,6 +63,8 @@ class AsyncContextFrame final : public BaseObject {
                                          v8::Local<v8::Value> unused,
                                          v8::Local<v8::Context> context,
                                          void* priv);
+  static void CreatePerIsolateProperties(IsolateData* isolate_data,
+                                         v8::Local<v8::ObjectTemplate> target);
 
   // If this needs memory info, swap the next two lines
   void MemoryInfo(MemoryTracker* tracker) const override;
