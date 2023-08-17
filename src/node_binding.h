@@ -31,7 +31,6 @@ static_assert(static_cast<int>(NM_F_LINKED) ==
 #endif
 
 #define NODE_BINDINGS_WITH_PER_ISOLATE_INIT(V)                                 \
-  V(async_context_frame)                                                                \
   V(async_wrap)                                                                \
   V(blob)                                                                      \
   V(builtins)                                                                  \

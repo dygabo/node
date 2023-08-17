@@ -1614,5 +1614,47 @@ TF_BUILTIN(GetOwnPropertyDescriptor, CodeStubAssembler) {
                   key);
 }
 
+TNode<Context> CodeStubAssembler::GetCurrentContext() {
+  TNode<RawPtrT> hsi = Load<RawPtrT>(ExternalConstant(
+      ExternalReference::handle_scope_implementer_address(isolate())));
+
+  using ContextStack = DetachableVector<Context>;
+  TNode<IntPtrT> size_offset =
+      IntPtrConstant(HandleScopeImplementer::kEnteredContextsOffset +
+                     ContextStack::kSizeOffset);
+  TNode<IntPtrT> data_offset =
+      IntPtrConstant(HandleScopeImplementer::kEnteredContextsOffset +
+                     ContextStack::kDataOffset);
+
+  TNode<IntPtrT> size = Load<IntPtrT>(hsi, size_offset);
+  TNode<RawPtrT> data = Load<RawPtrT>(hsi, data_offset);
+
+  TNode<IntPtrT> index_offset =
+      TimesSystemPointerSize(IntPtrSub(size, IntPtrConstant(1)));
+  return CAST(LoadFullTagged(data, index_offset));
+}
+
+TF_BUILTIN(GetContinuationPreservedEmbedderData, CodeStubAssembler) {
+  const TNode<Context> context = GetCurrentContext();
+  const TNode<NativeContext> native_context = LoadNativeContext(context);
+
+  const TNode<Object> preserved_embedder_data = LoadContextElement(
+      native_context, Context::CONTINUATION_PRESERVED_EMBEDDER_DATA_INDEX);
+
+  Return(preserved_embedder_data);
+}
+
+TF_BUILTIN(SetContinuationPreservedEmbedderData, CodeStubAssembler) {
+  const TNode<Context> context = GetCurrentContext();
+  const TNode<NativeContext> native_context = LoadNativeContext(context);
+
+  TNode<Object> value = Parameter<Object>(Descriptor::kArgument);
+  StoreContextElement(native_context,
+                      Context::CONTINUATION_PRESERVED_EMBEDDER_DATA_INDEX,
+                      value);
+
+  Return(UndefinedConstant());
+}
+
 }  // namespace internal
 }  // namespace v8

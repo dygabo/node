@@ -44,6 +44,12 @@ extern transitioning builtin
 ResolvePromise(Context, JSPromise, JSAny): JSAny;
 
 extern transitioning builtin
+GetContinuationPreservedEmbedderData(implicit context: Context)(): Object;
+
+extern transitioning builtin
+SetContinuationPreservedEmbedderData(implicit context: Context)(Object): Undefined;
+
+extern transitioning builtin
 EnqueueMicrotask(Context, Microtask): Undefined;
 
 macro

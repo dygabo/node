@@ -305,6 +305,11 @@ namespace internal {
   TFH(KeyedHasIC_SloppyArguments, LoadWithVector)                              \
   TFH(HasIndexedInterceptorIC, LoadWithVector)                                 \
                                                                                \
+  /* ContinuationPreservedEmbedderData helpers */                              \
+  TFJ(GetContinuationPreservedEmbedderData, kJSArgcReceiverSlots, kReceiver)   \
+  TFJ(SetContinuationPreservedEmbedderData, kJSArgcReceiverSlots + 1,          \
+      kReceiver, kArgument)                                                    \
+                                                                               \
   /* Microtask helpers */                                                      \
   TFS(EnqueueMicrotask, kMicrotask)                                            \
   ASM(RunMicrotasksTrampoline, RunMicrotasksEntry)                             \

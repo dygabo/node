@@ -507,8 +507,7 @@ AsyncWrap::AsyncWrap(Environment* env,
 AsyncWrap::AsyncWrap(Environment* env, Local<Object> object)
 #if defined(NODE_USE_NATIVE_ALS) && NODE_USE_NATIVE_ALS
     : BaseObject(env, object),
-      context_frame_(env->isolate(),
-                     AsyncContextFrame::current(env->isolate()))
+      context_frame_(env->isolate(), AsyncContextFrame::current(env->isolate()))
 #else
     : BaseObject(env, object)
 #endif

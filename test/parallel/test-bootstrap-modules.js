@@ -17,6 +17,7 @@ const expectedModules = new Set([
   'Internal Binding config',
   'Internal Binding timers',
   'Internal Binding async_context_frame',
+  'NativeModule internal/async_context_frame',
   'Internal Binding async_wrap',
   'Internal Binding task_queue',
   'Internal Binding symbols',

@@ -6175,6 +6175,16 @@ bool Genesis::InstallExtrasBindings() {
   SimpleInstallFunction(isolate(), extras_binding, "isTraceCategoryEnabled",
                         Builtin::kIsTraceCategoryEnabled, 1, true);
 
+  // binding.GetContinuationPreservedEmbedderData()
+  SimpleInstallFunction(
+      isolate(), extras_binding, "GetContinuationPreservedEmbedderData",
+      Builtin::kGetContinuationPreservedEmbedderData, 0, true);
+
+  // binding.SetContinuationPreservedEmbedderData(value)
+  SimpleInstallFunction(
+      isolate(), extras_binding, "SetContinuationPreservedEmbedderData",
+      Builtin::kSetContinuationPreservedEmbedderData, 1, true);
+
   // binding.trace(phase, category, name, id, data)
   SimpleInstallFunction(isolate(), extras_binding, "trace", Builtin::kTrace, 5,
                         true);

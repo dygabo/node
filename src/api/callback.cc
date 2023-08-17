@@ -369,18 +369,18 @@ MaybeLocal<Value> MakeSyncCallback(Isolate* isolate,
 
   // This is a toplevel invocation and the caller (intentionally)
   // didn't provide any async_context to run in. Install a default context.
-  MaybeLocal<Value> ret = InternalMakeCallback(env,
-                                               env->process_object(),
-                                               recv,
-                                               callback,
-                                               argc,
-                                               argv,
+  MaybeLocal<Value> ret =
+      InternalMakeCallback(env,
+                           env->process_object(),
+                           recv,
+                           callback,
+                           argc,
+                           argv,
 #if defined(NODE_USE_NATIVE_ALS) && NODE_USE_NATIVE_ALS
-                                               async_context{0, 0},
-                                               AsyncContextFrame::current(
-                                                   isolate));
+                           async_context{0, 0},
+                           AsyncContextFrame::current(isolate));
 #else
-                                               async_context{0, 0});
+                           async_context{0, 0});
 #endif
   return ret;
 }

@@ -4293,6 +4293,8 @@ class V8_EXPORT_PRIVATE CodeStubAssembler
                               TNode<Uint8T> property_details,
                               Label* needs_resize);
 
+  TNode<Context> GetCurrentContext();
+
  private:
   friend class CodeStubArguments;
 
