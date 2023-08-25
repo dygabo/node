@@ -57,9 +57,9 @@ Local<Value> AsyncContextFrame::exchange(Isolate* isolate, Local<Value> value) {
 namespace async_context_frame {
 
 void CreatePerContextProperties(Local<Object> target,
-                                                   Local<Value> unused,
-                                                   Local<Context> context,
-                                                   void* priv) {
+                                Local<Value> unused,
+                                Local<Context> context,
+                                void* priv) {
   Environment* env = Environment::GetCurrent(context);
 
   Local<String> getContinuationPreservedEmbedderData = FIXED_ONE_BYTE_STRING(
