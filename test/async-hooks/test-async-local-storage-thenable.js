@@ -10,8 +10,7 @@ const { AsyncLocalStorage } = require('async_hooks');
 // as thenables are not yet supported in V8. A fix should hopefully land soon.
 //
 // See: https://chromium-review.googlesource.com/c/v8/v8/+/4674242
-const { internalBinding } = require('internal/test/binding');
-const { AsyncContextFrame } = internalBinding('async_context_frame');
+const { AsyncContextFrame } = require('internal/async_context_frame');
 const hasAsyncContextFrame = typeof AsyncContextFrame === 'function';
 if (hasAsyncContextFrame) {
   return;
