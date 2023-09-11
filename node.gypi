@@ -96,15 +96,6 @@
         'NODE_USE_V8_PLATFORM=0',
       ],
     }],
-    [ 'node_use_native_als=="true"', {
-      'defines': [
-        'NODE_USE_NATIVE_ALS=1',
-      ],
-    }, {
-      'defines': [
-        'NODE_USE_NATIVE_ALS=0',
-      ],
-    }],
     [ 'v8_enable_shared_ro_heap==1', {
       'defines': ['NODE_V8_SHARED_RO_HEAP',],
     }],

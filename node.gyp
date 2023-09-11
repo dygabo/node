@@ -27,7 +27,6 @@
     'node_lib_target_name%': 'libnode',
     'node_intermediate_lib_type%': 'static_library',
     'node_builtin_modules_path%': '',
-    'node_use_native_als%': 'true',
     'linked_module_files': [
     ],
     # We list the deps/ files out instead of globbing them in js2c.cc since we

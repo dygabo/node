@@ -1,9 +1,7 @@
-#include "node.h"
-#if defined(NODE_USE_NATIVE_ALS) && NODE_USE_NATIVE_ALS
 #include "async_context_frame.h"
-#endif
 #include "async_wrap-inl.h"
 #include "env-inl.h"
+#include "node.h"
 #include "v8.h"
 
 namespace node {
@@ -46,24 +44,14 @@ InternalCallbackScope::InternalCallbackScope(AsyncWrap* async_wrap, int flags)
           async_wrap->env(),
           async_wrap->object(),
           {async_wrap->get_async_id(), async_wrap->get_trigger_async_id()},
-#if defined(NODE_USE_NATIVE_ALS) && NODE_USE_NATIVE_ALS
           flags,
-          async_wrap->context_frame()) {
-}
-#else
-          flags) {
-}
-#endif
+          async_wrap->context_frame()) {}
 
 InternalCallbackScope::InternalCallbackScope(Environment* env,
                                              Local<Object> object,
                                              const async_context& asyncContext,
-#if defined(NODE_USE_NATIVE_ALS) && NODE_USE_NATIVE_ALS
                                              int flags,
                                              v8::Local<v8::Value> context_frame)
-#else
-                                             int flags)
-#endif
     : env_(env),
       async_context_(asyncContext),
       object_(object),
@@ -92,10 +80,8 @@ InternalCallbackScope::InternalCallbackScope(Environment* env,
 
   isolate->SetIdle(false);
 
-#if defined(NODE_USE_NATIVE_ALS) && NODE_USE_NATIVE_ALS
   prior_context_frame_.Reset(
-      isolate, AsyncContextFrame::exchange(isolate, context_frame));
-#endif
+      isolate, async_context_frame::exchange(isolate, context_frame));
 
   env->async_hooks()->push_async_context(
     async_context_.async_id, async_context_.trigger_async_id, object);
@@ -141,9 +127,7 @@ void InternalCallbackScope::Close() {
   if (pushed_ids_) {
     env_->async_hooks()->pop_async_context(async_context_.async_id);
 
-#if defined(NODE_USE_NATIVE_ALS) && NODE_USE_NATIVE_ALS
-    AsyncContextFrame::exchange(isolate, prior_context_frame_.Get(isolate));
-#endif
+    async_context_frame::exchange(isolate, prior_context_frame_.Get(isolate));
   }
 
   if (failed_) return;
@@ -199,12 +183,8 @@ MaybeLocal<Value> InternalMakeCallback(Environment* env,
                                        const Local<Function> callback,
                                        int argc,
                                        Local<Value> argv[],
-#if defined(NODE_USE_NATIVE_ALS) && NODE_USE_NATIVE_ALS
                                        async_context asyncContext,
                                        Local<Value> context_frame) {
-#else
-                                       async_context asyncContext) {
-#endif
   CHECK(!recv.IsEmpty());
 #ifdef DEBUG
   for (int i = 0; i < argc; i++)
@@ -225,12 +205,8 @@ MaybeLocal<Value> InternalMakeCallback(Environment* env,
         async_hooks->fields()[AsyncHooks::kUsesExecutionAsyncResource] > 0;
   }
 
-#if defined(NODE_USE_NATIVE_ALS) && NODE_USE_NATIVE_ALS
   InternalCallbackScope scope(
       env, resource, asyncContext, flags, context_frame);
-#else
-  InternalCallbackScope scope(env, resource, asyncContext, flags);
-#endif
   if (scope.Failed()) {
     return MaybeLocal<Value>();
   }
@@ -307,7 +283,6 @@ MaybeLocal<Value> MakeCallback(Isolate* isolate,
                                int argc,
                                Local<Value> argv[],
                                async_context asyncContext) {
-#if defined(NODE_USE_NATIVE_ALS) && NODE_USE_NATIVE_ALS
   return InternalMakeCallback(
       isolate, recv, callback, argc, argv, asyncContext, Undefined(isolate));
 }
@@ -319,7 +294,6 @@ MaybeLocal<Value> InternalMakeCallback(Isolate* isolate,
                                        Local<Value> argv[],
                                        async_context asyncContext,
                                        Local<Value> context_frame) {
-#endif
   // Observe the following two subtleties:
   //
   // 1. The environment is retrieved from the callback function's context.
@@ -332,11 +306,7 @@ MaybeLocal<Value> InternalMakeCallback(Isolate* isolate,
   CHECK_NOT_NULL(env);
   Context::Scope context_scope(env->context());
   MaybeLocal<Value> ret = InternalMakeCallback(
-#if defined(NODE_USE_NATIVE_ALS) && NODE_USE_NATIVE_ALS
       env, recv, recv, callback, argc, argv, asyncContext, context_frame);
-#else
-      env, recv, recv, callback, argc, argv, asyncContext);
-#endif
   if (ret.IsEmpty() && env->async_callback_scope_depth() == 0) {
     // This is only for legacy compatibility and we may want to look into
     // removing/adjusting it.
@@ -369,19 +339,14 @@ MaybeLocal<Value> MakeSyncCallback(Isolate* isolate,
 
   // This is a toplevel invocation and the caller (intentionally)
   // didn't provide any async_context to run in. Install a default context.
-  MaybeLocal<Value> ret =
-      InternalMakeCallback(env,
-                           env->process_object(),
-                           recv,
-                           callback,
-                           argc,
-                           argv,
-#if defined(NODE_USE_NATIVE_ALS) && NODE_USE_NATIVE_ALS
-                           async_context{0, 0},
-                           AsyncContextFrame::current(isolate));
-#else
-                           async_context{0, 0});
-#endif
+  MaybeLocal<Value> ret = InternalMakeCallback(env,
+                                               env->process_object(),
+                                               recv,
+                                               callback,
+                                               argc,
+                                               argv,
+                                               async_context{0, 0},
+                                               v8::Undefined(isolate));
   return ret;
 }
 

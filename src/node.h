@@ -1473,9 +1473,7 @@ class NODE_EXTERN AsyncResource {
   Environment* env_;
   v8::Global<v8::Object> resource_;
   async_context async_context_;
-#if defined(NODE_USE_NATIVE_ALS) && NODE_USE_NATIVE_ALS
   v8::Global<v8::Value> context_frame_;
-#endif
 };
 
 #ifndef _WIN32

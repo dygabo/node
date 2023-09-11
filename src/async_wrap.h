@@ -191,9 +191,7 @@ class AsyncWrap : public BaseObject {
   inline double get_async_id() const;
   inline double get_trigger_async_id() const;
 
-#if defined(NODE_USE_NATIVE_ALS) && NODE_USE_NATIVE_ALS
   inline v8::Local<v8::Value> context_frame() const;
-#endif
 
   void AsyncReset(v8::Local<v8::Object> resource,
                   double execution_async_id = kInvalidAsyncId,
@@ -248,9 +246,7 @@ class AsyncWrap : public BaseObject {
   double async_id_ = kInvalidAsyncId;
   double trigger_async_id_ = kInvalidAsyncId;
 
-#if defined(NODE_USE_NATIVE_ALS) && NODE_USE_NATIVE_ALS
   v8::Global<v8::Value> context_frame_;
-#endif
 };
 
 }  // namespace node

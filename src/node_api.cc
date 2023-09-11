@@ -544,9 +544,7 @@ class AsyncContext {
     trigger_async_id_ = node_env()->get_default_trigger_async_id();
     v8::Isolate* isolate = node_env()->isolate();
     resource_.Reset(isolate, resource_object);
-#if defined(NODE_USE_NATIVE_ALS) && NODE_USE_NATIVE_ALS
-    context_frame_.Reset(isolate, node::AsyncContextFrame::current(isolate));
-#endif
+    context_frame_.Reset(isolate, node::async_context_frame::current(isolate));
     lost_reference_ = false;
     if (externally_managed_resource) {
       resource_.SetWeak(
@@ -579,12 +577,8 @@ class AsyncContext {
         callback,
         argc,
         argv,
-#if defined(NODE_USE_NATIVE_ALS) && NODE_USE_NATIVE_ALS
         {async_id_, trigger_async_id_},
         context_frame_.Get(node_env()->isolate()));
-#else
-        {async_id_, trigger_async_id_});
-#endif
   }
 
   inline napi_callback_scope OpenCallbackScope() {
@@ -640,9 +634,7 @@ class AsyncContext {
   double trigger_async_id_;
   v8::Global<v8::Object> resource_;
   bool lost_reference_;
-#if defined(NODE_USE_NATIVE_ALS) && NODE_USE_NATIVE_ALS
   v8::Global<v8::Value> context_frame_;
-#endif
 };
 
 }  // end of anonymous namespace

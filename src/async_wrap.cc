@@ -20,16 +20,13 @@
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "async_wrap.h"  // NOLINT(build/include_inline)
+#include "async_context_frame.h"
 #include "async_wrap-inl.h"
 #include "env-inl.h"
 #include "node_errors.h"
 #include "node_external_reference.h"
 #include "tracing/traced_value.h"
 #include "util-inl.h"
-
-#if defined(NODE_USE_NATIVE_ALS) && NODE_USE_NATIVE_ALS
-#include "async_context_frame.h"
-#endif
 
 #include "v8.h"
 
@@ -505,14 +502,9 @@ AsyncWrap::AsyncWrap(Environment* env,
 }
 
 AsyncWrap::AsyncWrap(Environment* env, Local<Object> object)
-#if defined(NODE_USE_NATIVE_ALS) && NODE_USE_NATIVE_ALS
     : BaseObject(env, object),
-      context_frame_(env->isolate(), AsyncContextFrame::current(env->isolate()))
-#else
-    : BaseObject(env, object)
-#endif
-{
-}
+      context_frame_(env->isolate(),
+                     async_context_frame::current(env->isolate())) {}
 
 // This method is necessary to work around one specific problem:
 // Before the init() hook runs, if there is one, the BaseObject() constructor
@@ -636,9 +628,7 @@ void AsyncWrap::AsyncReset(Local<Object> resource, double execution_async_id,
       UNREACHABLE();
   }
 
-#if defined(NODE_USE_NATIVE_ALS) && NODE_USE_NATIVE_ALS
-  context_frame_.Reset(isolate, AsyncContextFrame::current(isolate));
-#endif
+  context_frame_.Reset(isolate, async_context_frame::current(isolate));
 
   if (silent) return;
 
@@ -690,12 +680,8 @@ MaybeLocal<Value> AsyncWrap::MakeCallback(const Local<Function> cb,
                            cb,
                            argc,
                            argv,
-#if defined(NODE_USE_NATIVE_ALS) && NODE_USE_NATIVE_ALS
                            context,
                            context_frame_.Get(env()->isolate()));
-#else
-                           context);
-#endif
 
   // This is a static call with cached values because the `this` object may
   // no longer be alive at this point.

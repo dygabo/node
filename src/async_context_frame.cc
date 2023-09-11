@@ -17,44 +17,45 @@ using v8::Object;
 using v8::String;
 using v8::Value;
 
-#if defined(NODE_USE_NATIVE_ALS) && NODE_USE_NATIVE_ALS
-
 namespace node {
+namespace async_context_frame {
 
 //
 // Scope helper
 //
-AsyncContextFrame::Scope::Scope(Isolate* isolate, Local<Value> object)
+Scope::Scope(Isolate* isolate, Local<Value> object)
     : isolate_(isolate) {
-  auto prior = AsyncContextFrame::current(isolate);
-
-  isolate_->GetEnteredOrMicrotaskContext()
-      ->SetContinuationPreservedEmbedderData(object);
-
+  auto prior = exchange(isolate, object);
   prior_.Reset(isolate, prior);
 }
 
-AsyncContextFrame::Scope::~Scope() {
+Scope::~Scope() {
   auto value = prior_.Get(isolate_);
-  isolate_->GetEnteredOrMicrotaskContext()
-      ->SetContinuationPreservedEmbedderData(value);
+  set(isolate_, value);
 }
 
-Local<Value> AsyncContextFrame::current(Isolate* isolate) {
+Local<Value> current(Isolate* isolate) {
   return isolate->GetEnteredOrMicrotaskContext()
       ->GetContinuationPreservedEmbedderData();
 }
 
-// NOTE: It's generally recommended to use AsyncContextFrame::Scope
-// but sometimes (such as enterWith) a direct exchange is needed.
-Local<Value> AsyncContextFrame::exchange(Isolate* isolate, Local<Value> value) {
-  auto prior = current(isolate);
+void set(Isolate* isolate, Local<Value> value) {
+  auto env = Environment::GetCurrent(isolate);
+  if (!env->options()->async_context_frame) {
+    return;
+  }
+
   isolate->GetEnteredOrMicrotaskContext()->SetContinuationPreservedEmbedderData(
       value);
-  return prior;
 }
 
-namespace async_context_frame {
+// NOTE: It's generally recommended to use async_context_frame::Scope
+// but sometimes (such as enterWith) a direct exchange is needed.
+Local<Value> exchange(Isolate* isolate, Local<Value> value) {
+  auto prior = current(isolate);
+  set(isolate, value);
+  return prior;
+}
 
 void CreatePerContextProperties(Local<Object> target,
                                 Local<Value> unused,
@@ -85,20 +86,7 @@ void CreatePerContextProperties(Local<Object> target,
 }
 
 }  // namespace async_context_frame
-
 }  // namespace node
 
 NODE_BINDING_CONTEXT_AWARE_INTERNAL(
     async_context_frame, node::async_context_frame::CreatePerContextProperties)
-
-#else
-namespace node {
-void EmptyContextProperties(Local<Object> target,
-                            Local<Value> unused,
-                            Local<Context> context,
-                            void* priv) {}
-}  // namespace node
-
-NODE_BINDING_CONTEXT_AWARE_INTERNAL(async_context_frame,
-                                    node::EmptyContextProperties)
-#endif  // defined(NODE_USE_NATIVE_ALS) && NODE_USE_NATIVE_ALS

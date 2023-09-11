@@ -447,6 +447,10 @@ EnvironmentOptionsParser::EnvironmentOptionsParser() {
   AddOption("--experimental-report", "", NoOp{}, kAllowedInEnvvar);
   AddOption(
       "--experimental-wasi-unstable-preview1", "", NoOp{}, kAllowedInEnvvar);
+  AddOption("--async-context-frame",
+            "Improve AsyncLocalStorage performance with AsyncContextFrame",
+            &EnvironmentOptions::async_context_frame,
+            kAllowedInEnvvar);
   AddOption("--expose-internals", "", &EnvironmentOptions::expose_internals);
   AddOption("--frozen-intrinsics",
             "experimental frozen intrinsics support",

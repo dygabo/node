@@ -17,13 +17,8 @@ AsyncResource::AsyncResource(Isolate* isolate,
                              const char* name,
                              async_id trigger_async_id)
     : env_(Environment::GetCurrent(isolate)),
-#if defined(NODE_USE_NATIVE_ALS) && NODE_USE_NATIVE_ALS
       resource_(isolate, resource),
-      context_frame_(isolate, AsyncContextFrame::current(isolate))
-#else
-      resource_(isolate, resource)
-#endif
-{
+      context_frame_(isolate, async_context_frame::current(isolate)) {
   CHECK_NOT_NULL(env_);
   async_context_ = EmitAsyncInit(isolate, resource, name,
                                  trigger_async_id);
@@ -36,40 +31,34 @@ AsyncResource::~AsyncResource() {
 MaybeLocal<Value> AsyncResource::MakeCallback(Local<Function> callback,
                                               int argc,
                                               Local<Value>* argv) {
-#if defined(NODE_USE_NATIVE_ALS) && NODE_USE_NATIVE_ALS
   auto isolate = env_->isolate();
   auto context_frame = context_frame_.Get(isolate);
-  AsyncContextFrame::Scope async_context_frame_scope(isolate, context_frame);
-#endif
-  return node::MakeCallback(env_->isolate(), get_resource(),
-                            callback, argc, argv,
-                            async_context_);
+  async_context_frame::Scope async_context_frame_scope(isolate, context_frame);
+
+  return node::MakeCallback(
+      isolate, get_resource(), callback, argc, argv, async_context_);
 }
 
 MaybeLocal<Value> AsyncResource::MakeCallback(const char* method,
                                               int argc,
                                               Local<Value>* argv) {
-#if defined(NODE_USE_NATIVE_ALS) && NODE_USE_NATIVE_ALS
   auto isolate = env_->isolate();
   auto context_frame = context_frame_.Get(isolate);
-  AsyncContextFrame::Scope async_context_frame_scope(isolate, context_frame);
-#endif
-  return node::MakeCallback(env_->isolate(), get_resource(),
-                            method, argc, argv,
-                            async_context_);
+  async_context_frame::Scope async_context_frame_scope(isolate, context_frame);
+
+  return node::MakeCallback(
+      isolate, get_resource(), method, argc, argv, async_context_);
 }
 
 MaybeLocal<Value> AsyncResource::MakeCallback(Local<String> symbol,
                                               int argc,
                                               Local<Value>* argv) {
-#if defined(NODE_USE_NATIVE_ALS) && NODE_USE_NATIVE_ALS
   auto isolate = env_->isolate();
   auto context_frame = context_frame_.Get(isolate);
-  AsyncContextFrame::Scope async_context_frame_scope(isolate, context_frame);
-#endif
-  return node::MakeCallback(env_->isolate(), get_resource(),
-                            symbol, argc, argv,
-                            async_context_);
+  async_context_frame::Scope async_context_frame_scope(isolate, context_frame);
+
+  return node::MakeCallback(
+      isolate, get_resource(), symbol, argc, argv, async_context_);
 }
 
 Local<Object> AsyncResource::get_resource() {
