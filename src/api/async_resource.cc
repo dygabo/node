@@ -17,14 +17,17 @@ AsyncResource::AsyncResource(Isolate* isolate,
                              const char* name,
                              async_id trigger_async_id)
     : env_(Environment::GetCurrent(isolate)),
-      resource_(isolate, resource),
-      context_frame_(isolate, async_context_frame::current(isolate)) {
+      resource_(isolate, resource) {
   CHECK_NOT_NULL(env_);
+  env_->SetAsyncResourceContextFrame(
+      reinterpret_cast<std::uintptr_t>(this), {isolate, async_context_frame::current(isolate)});
   async_context_ = EmitAsyncInit(isolate, resource, name,
                                  trigger_async_id);
 }
 
 AsyncResource::~AsyncResource() {
+  CHECK_NOT_NULL(env_);
+  env_->RemoveAsyncResourceContextFrame(reinterpret_cast<std::uintptr_t>(this));
   EmitAsyncDestroy(env_, async_context_);
 }
 
@@ -32,7 +35,8 @@ MaybeLocal<Value> AsyncResource::MakeCallback(Local<Function> callback,
                                               int argc,
                                               Local<Value>* argv) {
   auto isolate = env_->isolate();
-  auto context_frame = context_frame_.Get(isolate);
+  auto context_frame = env_->GetAsyncResourceContextFrame(
+      reinterpret_cast<std::uintptr_t>(this)).Get(isolate);
   async_context_frame::Scope async_context_frame_scope(isolate, context_frame);
 
   return node::MakeCallback(
@@ -43,7 +47,8 @@ MaybeLocal<Value> AsyncResource::MakeCallback(const char* method,
                                               int argc,
                                               Local<Value>* argv) {
   auto isolate = env_->isolate();
-  auto context_frame = context_frame_.Get(isolate);
+  auto context_frame = env_->GetAsyncResourceContextFrame(
+    reinterpret_cast<std::uintptr_t>(this)).Get(isolate);
   async_context_frame::Scope async_context_frame_scope(isolate, context_frame);
 
   return node::MakeCallback(
@@ -54,7 +59,8 @@ MaybeLocal<Value> AsyncResource::MakeCallback(Local<String> symbol,
                                               int argc,
                                               Local<Value>* argv) {
   auto isolate = env_->isolate();
-  auto context_frame = context_frame_.Get(isolate);
+  auto context_frame = env_->GetAsyncResourceContextFrame(
+    reinterpret_cast<std::uintptr_t>(this)).Get(isolate);
   async_context_frame::Scope async_context_frame_scope(isolate, context_frame);
 
   return node::MakeCallback(

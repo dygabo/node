@@ -1473,7 +1473,6 @@ class NODE_EXTERN AsyncResource {
   Environment* env_;
   v8::Global<v8::Object> resource_;
   async_context async_context_;
-  v8::Global<v8::Value> context_frame_;
 };
 
 #ifndef _WIN32
