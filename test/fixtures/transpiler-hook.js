@@ -1,8 +1,8 @@
 'use strict';
 
 const ts = require('./snapshot/typescript');
-const module = require('node:module');
-
+const { addHooks } = require('node:module');
+const path = require('path');
 const extensions = {
   '.cts': 'typescript-commonjs',
   '.mts': 'typescript-esm',
@@ -26,34 +26,39 @@ const output = {
 
 function resolve(specifier, context, nextResolve) {
   const resolved = nextResolve(specifier, context);
-  const supportedExt = extensions.find((ext) => resolved.url.endsWith(ext));
-  if (!supportedExt) {
+  const ext = path.extname(resolved.filename);
+  const supportedFormat = extensions[ext];
+  if (!supportedFormat) {
     return resolved;
   }
-  return {
+  const result = {
     ...resolved,
-    format: extensions[supportedExt],
+    format: supportedFormat,
   };
+  return result;
 }
 
 function load(url, context, nextLoad) {
-  const { source: rawSource, format } = nextLoad(url, context);
-  if (!format.startsWith('typescript')) {
-    return loadResult;
+  const loadResult = nextLoad(url, context);
+  const { source: rawSource, format } = loadResult;
+  if (!format || !format.startsWith('typescript')) {
+    return { format, source: rawSource };
   }
 
-  const transpiled = ts.transpileModule(source, {
+  const transpiled = ts.transpileModule(rawSource, {
     compilerOptions: output[format].options
   });
 
-  return {
+  const result = {
+    ...loadResult,
     format: output[format].format,
-    shortCircuit: true,
-    source: transpiled,
+    source: transpiled.outputText,
   };
+
+  return result;
 }
 
-module.register({
+addHooks({
   resolve,
   load,
 });
