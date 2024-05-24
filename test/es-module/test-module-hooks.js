@@ -13,6 +13,18 @@ spawnSyncAndAssert(process.execPath,
   ], {
     trim: true,
     stdout: 'VirtualPoint { x: 13, y: 56 }'
-  });
+  }
+);
 
+spawnSyncAndAssert(process.execPath,
+  [
+    '--require',
+    fixtures.path('exports-hook.js'),
+    fixtures.path('require-dummy.js'),
+  ], {
+    trim: true,
+    stdout: '43'
+  }
+);
+  
 // TODO(joyeecheung): require('xx.ts') here?
