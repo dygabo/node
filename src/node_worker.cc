@@ -1022,7 +1022,8 @@ void CreateWorkerPerIsolateProperties(IsolateData* isolate_data,
     SetProtoMethod(isolate, w, "loopStartTime", Worker::LoopStartTime);
 
     SetConstructorFunction(isolate, target, "Worker", w);
-    SetMethodNoSideEffect(isolate, target, "hasHooksThread", Worker::HasHooksThread);
+    SetMethodNoSideEffect(
+        isolate, target, "hasHooksThread", Worker::HasHooksThread);
   }
 
   {
