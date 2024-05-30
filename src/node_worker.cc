@@ -50,6 +50,7 @@ constexpr double kMB = 1024 * 1024;
 std::unordered_map<uint64_t, MessagePort*> message_ports;
 Mutex Worker::messagePortsMutex;
 std::atomic_bool Worker::internalExists{false};
+Mutex Worker::instantiationMutex;
 
 Worker::Worker(Environment* env,
                Local<Object> wrap,
@@ -486,18 +487,28 @@ Worker::~Worker() {
 }
 
 void Worker::New(const FunctionCallbackInfo<Value>& args) {
+  Mutex::ScopedLock lock(instantiationMutex);
   Environment* env = Environment::GetCurrent(args);
   auto is_internal = args[5];
   CHECK(is_internal->IsBoolean());
   if (is_internal->IsFalse()) {
     THROW_IF_INSUFFICIENT_PERMISSIONS(
         env, permission::PermissionScope::kWorkerThreads, "");
-  } else {
-    internalExists = true;
   }
   Isolate* isolate = args.GetIsolate();
 
   CHECK(args.IsConstructCall());
+  auto creatingHooksThread = is_internal->IsTrue();
+
+  if (creatingHooksThread && internalExists) {
+    isolate->ThrowException(ERR_HOOKS_THREAD_EXISTS(
+        isolate, "Customization hooks thread already exists"));
+    return;
+  }
+
+  if (creatingHooksThread) {
+    internalExists = true;
+  }
 
   if (env->isolate_data()->platform() == nullptr) {
     THROW_ERR_MISSING_PLATFORM_FOR_WORKER(env);
