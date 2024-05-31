@@ -49,7 +49,7 @@ namespace worker {
 constexpr double kMB = 1024 * 1024;
 std::unordered_map<uint64_t, MessagePort*> message_ports;
 Mutex Worker::messagePortsMutex;
-std::atomic_bool Worker::internalExists{false};
+std::atomic_bool Worker::hooksWorkerExists{false};
 Mutex Worker::instantiationMutex;
 
 Worker::Worker(Environment* env,
@@ -500,14 +500,14 @@ void Worker::New(const FunctionCallbackInfo<Value>& args) {
   CHECK(args.IsConstructCall());
   auto creatingHooksThread = is_internal->IsTrue();
 
-  if (creatingHooksThread && internalExists) {
+  if (creatingHooksThread && hooksWorkerExists) {
     isolate->ThrowException(ERR_HOOKS_THREAD_EXISTS(
         isolate, "Customization hooks thread already exists"));
     return;
   }
 
   if (creatingHooksThread) {
-    internalExists = true;
+    hooksWorkerExists = true;
   }
 
   if (env->isolate_data()->platform() == nullptr) {
@@ -934,7 +934,7 @@ void Worker::LoopStartTime(const FunctionCallbackInfo<Value>& args) {
 }
 
 void Worker::HasHooksThread(const FunctionCallbackInfo<Value>& args) {
-  args.GetReturnValue().Set(Worker::internalExists);
+  args.GetReturnValue().Set(Worker::hooksWorkerExists);
 }
 
 namespace {
