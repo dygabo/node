@@ -60,6 +60,7 @@ class Worker : public AsyncWrap {
 
   bool is_stopped() const;
   const SnapshotData* snapshot_data() const { return snapshot_data_; }
+  MessagePort* parent_port() const { return parent_port_; }
 
   static void New(const v8::FunctionCallbackInfo<v8::Value>& args);
   static void CloneParentEnvVars(
@@ -130,6 +131,9 @@ class Worker : public AsyncWrap {
   // when the worker thread creates a new Environment, and gets
   // destroyed alongwith the worker thread.
   Environment* env_ = nullptr;
+
+  // The parent port used to communicate with the worker
+  MessagePort* parent_port_ = nullptr;
 
   const SnapshotData* snapshot_data_ = nullptr;
   friend class WorkerThreadData;
