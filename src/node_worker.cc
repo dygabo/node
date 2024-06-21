@@ -979,6 +979,7 @@ void SendToWorker(const FunctionCallbackInfo<Value>& args) {
   // Not all messages require a transfer_list
   if (args.Length() > 2) {
     if (!GetTransferList(env, context, args[2], &transfer_list)) {
+      THROW_ERR_INVALID_ARG_TYPE(isolate, "Invalid transfer list");  
       return;
     }
   }
