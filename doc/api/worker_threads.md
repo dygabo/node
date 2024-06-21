@@ -61,7 +61,7 @@ Worker threads inherit non-process-specific options by default. Refer to
 [`Worker constructor options`][] to know how to customize worker thread options,
 specifically `argv` and `execArgv` options.
 
-## `worker.connect(target, data)`
+## `worker.connect(target[, data][, timeout])`
 
 <!-- YAML
 added: REPLACEME
@@ -71,6 +71,8 @@ added: REPLACEME
 
 * `target` {number} The target thread id.
 * `data` {any} Any arbitrary, cloneable JavaScript value.
+* `timeout` {number} Time to wait in milliseconds. By default it's `undefined`, which
+  means wait forever.
 * Returns: {Promise} A promise for a `MessagePort`.
 
 Establishes a connection to another worker thread in the same process, returning a
@@ -1479,7 +1481,7 @@ thread spawned will spawn another until the application crashes.
 [`v8.getHeapSnapshot()`]: v8.md#v8getheapsnapshotoptions
 [`vm`]: vm.md
 [`worker.SHARE_ENV`]: #workershare_env
-[`worker.connect()`]: #workerconnecttarget-data
+[`worker.connect()`]: #workerconnecttarget-data-timeout
 [`worker.on('message')`]: #event-message_1
 [`worker.postMessage()`]: #workerpostmessagevalue-transferlist
 [`worker.setConnectionsListener()`]: #workersetconnectionslistenerfn

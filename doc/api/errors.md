@@ -4029,7 +4029,7 @@ An error occurred trying to allocate memory. This should never happen.
 [`Writable`]: stream.md#class-streamwritable
 [`child_process`]: child_process.md
 [`cipher.getAuthTag()`]: crypto.md#ciphergetauthtag
-[`connect()`]: worker_threads.md#workerconnecttarget-data
+[`connect()`]: worker_threads.md#workerconnecttarget-data-timeout
 [`crypto.getDiffieHellman()`]: crypto.md#cryptogetdiffiehellmangroupname
 [`crypto.scrypt()`]: crypto.md#cryptoscryptpassword-salt-keylen-options-callback
 [`crypto.scryptSync()`]: crypto.md#cryptoscryptsyncpassword-salt-keylen-options
