@@ -60,7 +60,6 @@ class Worker : public AsyncWrap {
 
   bool is_stopped() const;
   const SnapshotData* snapshot_data() const { return snapshot_data_; }
-  MessagePort* parent_port() const { return parent_port_; }
 
   static void New(const v8::FunctionCallbackInfo<v8::Value>& args);
   static void CloneParentEnvVars(
@@ -77,6 +76,9 @@ class Worker : public AsyncWrap {
   static void TakeHeapSnapshot(const v8::FunctionCallbackInfo<v8::Value>& args);
   static void LoopIdleTime(const v8::FunctionCallbackInfo<v8::Value>& args);
   static void LoopStartTime(const v8::FunctionCallbackInfo<v8::Value>& args);
+
+  // this mutex is to synchronize access to message_ports calls
+  static Mutex messagePortsMutex;
 
  private:
   bool CreateEnvMessagePort(Environment* env);

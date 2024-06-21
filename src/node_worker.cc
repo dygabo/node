@@ -47,8 +47,8 @@ namespace node {
 namespace worker {
 
 constexpr double kMB = 1024 * 1024;
-std::unordered_map<uint64_t, Worker*> workers;
-MessagePort* main_port;
+std::unordered_map<uint64_t, MessagePort*> message_ports;
+Mutex Worker::messagePortsMutex;
 
 Worker::Worker(Environment* env,
                Local<Object> wrap,
@@ -662,10 +662,6 @@ void Worker::StartThread(const FunctionCallbackInfo<Value>& args) {
   Worker* w;
   ASSIGN_OR_RETURN_UNWRAP(&w, args.This());
   Mutex::ScopedLock lock(w->mutex_);
-
-  // Store a reference to the worker so that it can be used
-  // for inter thread communication
-  workers[w->thread_id_.id] = w;
   w->stopped_ = false;
 
   if (w->resource_limits_[kStackSizeMb] > 0) {
@@ -690,6 +686,14 @@ void Worker::StartThread(const FunctionCallbackInfo<Value>& args) {
     // gcc 6.3 detect undefined behaviour when there shouldn't be any.
     // gcc 7+ handles this well.
     Worker* w = static_cast<Worker*>(arg);
+
+    // Store a reference to the worker so that it can be used
+    // for inter thread communication
+    {
+      Mutex::ScopedLock message_ports_lock(messagePortsMutex);
+      message_ports[w->thread_id_.id] = w->parent_port_;
+    }
+
     const uintptr_t stack_top = reinterpret_cast<uintptr_t>(&arg);
 
     // Leave a few kilobytes just to make sure we're within limits and have
@@ -781,7 +785,11 @@ void Worker::Exit(ExitCode code,
                   const char* error_message) {
   Mutex::ScopedLock lock(mutex_);
 
-  workers.erase(thread_id_.id);
+  // Remove reference to the port used for inter-thread communication
+  {
+    Mutex::ScopedLock message_ports_lock(messagePortsMutex);
+    message_ports.erase(thread_id_.id);
+  }
 
   Debug(this,
         "Worker %llu called Exit(%d, %s, %s)",
@@ -927,15 +935,17 @@ void GetEnvMessagePort(const FunctionCallbackInfo<Value>& args) {
 }
 
 void SetMainPort(const FunctionCallbackInfo<Value>& args) {
+  Mutex::ScopedLock lock(Worker::messagePortsMutex);
+
   if (args.Length() == 0 || args[0]->IsNullOrUndefined()) {
-    main_port = nullptr;
+    message_ports.erase(0);
     return;
   }
 
   MessagePort* port;
   ASSIGN_OR_RETURN_UNWRAP(&port, args[0]);
 
-  main_port = port;
+  message_ports[0] = port;
 }
 
 void SendToWorker(const FunctionCallbackInfo<Value>& args) {
@@ -951,19 +961,18 @@ void SendToWorker(const FunctionCallbackInfo<Value>& args) {
   CHECK(args[0]->IsUint32());
   auto tid = args[0].As<v8::Uint32>()->Value();
 
-  MessagePort* port;
+  MessagePort* port = nullptr;
+  {
+    Mutex::ScopedLock lock(Worker::messagePortsMutex);
 
-  if (tid == 0) {
-    port = main_port;
-  } else {
-    auto it = workers.find(tid);
-    if (it == workers.end()) {
+    auto it = message_ports.find(tid);
+    if (it == message_ports.end()) {
       std::string message = SPrintF("Invalid worker id %d", tid);
       THROW_ERR_WORKER_INVALID_ID(isolate, message.c_str());
       return;
     }
 
-    port = it->second->parent_port();
+    port = it->second;
   }
 
   TransferList transfer_list;
